@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Win11 Upgrade Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#F0F2F5; --surface:#fff; --surface2:#F7F8FA; --border:#E2E6ED;
+  --text:#0D1117; --text2:#4A5568; --text3:#8A97A8;
+  --blue:#1B6FE8; --blue-lt:#EBF2FD; --blue-dk:#1459C4;
+  --green:#0FA861; --green-lt:#E6F7F0;
+  --amber:#D97706; --amber-lt:#FEF3C7;
+  --red:#DC2626; --red-lt:#FEE2E2;
+  --orange:#EA580C; --orange-lt:#FFEDD5;
+  --purple:#7C3AED; --purple-lt:#EDE9FE;
+  --grey:#64748B; --grey-lt:#F1F5F9;
+  --shadow:0 1px 3px rgba(0,0,0,.06),0 1px 2px rgba(0,0,0,.04);
+  --shadow-lg:0 12px 32px rgba(0,0,0,.12),0 4px 8px rgba(0,0,0,.06);
+  --r:10px; --rs:6px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px}
+#app{display:flex;height:100vh;overflow:hidden}
+
+/* SIDEBAR */
+#sidebar{width:220px;min-width:220px;background:var(--text);display:flex;flex-direction:column}
+.sb-logo{padding:20px 20px 16px;border-bottom:1px solid rgba(255,255,255,.08)}
+.sb-logo .mark{font-size:11px;font-weight:700;letter-spacing:.1em;color:rgba(255,255,255,.35);text-transform:uppercase;margin-bottom:2px}
+.sb-logo .title{font-size:15px;font-weight:700;color:#fff;line-height:1.2}
+.sb-nav{flex:1;padding:12px 0}
+.nav-lbl{font-size:10px;font-weight:700;letter-spacing:.1em;color:rgba(255,255,255,.28);text-transform:uppercase;padding:12px 20px 4px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 20px;cursor:pointer;color:rgba(255,255,255,.5);font-size:13.5px;font-weight:500;transition:all .15s;border-left:3px solid transparent}
+.nav-item:hover{color:#fff;background:rgba(255,255,255,.06)}
+.nav-item.active{color:#fff;background:rgba(255,255,255,.1);border-left-color:var(--blue)}
+.nav-icon{font-size:14px;width:18px;text-align:center}
+.nav-badge{margin-left:auto;background:var(--red);color:#fff;font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px;min-width:18px;text-align:center}
+.sb-foot{padding:16px 20px;border-top:1px solid rgba(255,255,255,.08)}
+.demo-badge{font-size:11px;color:var(--amber);font-weight:600;display:flex;align-items:center;gap:6px}
+
+/* MAIN */
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+#topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;height:56px;min-height:56px;display:flex;align-items:center;gap:16px}
+.topbar-title{font-size:17px;font-weight:700;flex:1}
+.search-wrap{position:relative;width:280px}
+.search-wrap input{width:100%;padding:8px 14px 8px 36px;border:1.5px solid var(--border);border-radius:20px;font-family:'DM Sans',sans-serif;font-size:13px;outline:none;background:var(--bg);transition:all .15s}
+.search-wrap input:focus{border-color:var(--blue);background:#fff}
+.search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:13px}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block}
+#content{flex:1;overflow-y:auto;padding:24px 28px}
+
+/* KPI CARDS */
+.kpi-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:20px}
+.kpi-card{background:var(--surface);border-radius:var(--r);padding:16px;box-shadow:var(--shadow);border:1px solid var(--border);position:relative;overflow:hidden}
+.kpi-card::after{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.kpi-card.c-total::after{background:var(--grey)}
+.kpi-card.c-complete::after{background:var(--green)}
+.kpi-card.c-progress::after{background:var(--amber)}
+.kpi-card.c-failed::after{background:var(--red)}
+.kpi-card.c-overdue::after{background:var(--orange)}
+.kpi-card.c-pct::after{background:var(--blue)}
+.kpi-lbl{font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--text3);margin-bottom:8px}
+.kpi-val{font-size:28px;font-weight:700;line-height:1;font-family:'DM Mono',monospace}
+.kpi-card.c-complete .kpi-val{color:var(--green)}
+.kpi-card.c-failed .kpi-val{color:var(--red)}
+.kpi-card.c-overdue .kpi-val{color:var(--orange)}
+.kpi-card.c-pct .kpi-val{color:var(--blue)}
+.kpi-sub{font-size:11px;color:var(--text3);margin-top:4px}
+
+/* PROGRESS BAR */
+.prog-wrap{margin-bottom:18px}
+.prog-lbl{display:flex;justify-content:space-between;font-size:12px;color:var(--text3);margin-bottom:5px}
+.prog-bar{height:6px;background:var(--border);border-radius:3px;overflow:hidden}
+.prog-fill{height:100%;background:var(--green);border-radius:3px;transition:width .6s ease}
+
+/* FILTERS */
+.filter-bar{display:flex;gap:8px;margin-bottom:14px;align-items:center;flex-wrap:wrap}
+.fsel{padding:7px 12px;border:1.5px solid var(--border);border-radius:var(--rs);font-family:'DM Sans',sans-serif;font-size:13px;background:var(--surface);color:var(--text);outline:none;cursor:pointer;transition:border-color .15s}
+.fsel:focus{border-color:var(--blue)}
+.fcount{margin-left:auto;font-size:12px;color:var(--text3)}
+
+/* TABLE */
+.tbl-wrap{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--shadow);overflow:hidden}
+table{width:100%;border-collapse:collapse}
+thead{background:var(--surface2)}
+th{padding:11px 14px;text-align:left;font-size:11.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--text3);border-bottom:1px solid var(--border);white-space:nowrap;cursor:pointer;user-select:none;transition:color .15s}
+th:hover{color:var(--text)}
+th.sorted{color:var(--blue)}
+td{padding:11px 14px;font-size:13.5px;border-bottom:1px solid var(--border);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--surface2)}
+tr{cursor:pointer;transition:background .1s}
+.dn{font-weight:600}.ds{font-family:'DM Mono',monospace;font-size:11.5px;color:var(--text3)}
+.un{font-weight:500}.ud{font-size:11.5px;color:var(--text3)}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:11.5px;font-weight:600;white-space:nowrap}
+.badge::before{content:'';width:5px;height:5px;border-radius:50%}
+.b-ns{background:var(--grey-lt);color:var(--grey)}.b-ns::before{background:var(--grey)}
+.b-sc{background:var(--blue-lt);color:var(--blue)}.b-sc::before{background:var(--blue)}
+.b-ip{background:var(--amber-lt);color:var(--amber)}.b-ip::before{background:var(--amber)}
+.b-co{background:var(--green-lt);color:var(--green)}.b-co::before{background:var(--green)}
+.b-fa{background:var(--red-lt);color:var(--red)}.b-fa::before{background:var(--red)}
+.b-de{background:var(--orange-lt);color:var(--orange)}.b-de::before{background:var(--orange)}
+.b-ca{background:var(--grey-lt);color:var(--grey)}.b-ca::before{background:var(--grey)}
+.r-yes{color:var(--green);font-weight:600}.r-no{color:var(--red);font-weight:600}.r-unk{color:var(--text3)}
+
+/* MODAL */
+#dov{position:fixed;inset:0;background:rgba(13,17,23,.55);backdrop-filter:blur(4px);z-index:100;opacity:0;pointer-events:none;transition:opacity .2s;display:flex;align-items:center;justify-content:center;padding:24px}
+#dov.open{opacity:1;pointer-events:all}
+#drawer{background:var(--surface);border-radius:16px;box-shadow:var(--shadow-lg);z-index:101;overflow:hidden;width:100%;max-width:680px;max-height:90vh;display:flex;flex-direction:column;transform:scale(.96) translateY(12px);transition:transform .25s cubic-bezier(.4,0,.2,1),opacity .2s;opacity:0}
+#dov.open #drawer{transform:scale(1) translateY(0);opacity:1}
+.dh{padding:20px 24px 16px;border-bottom:1px solid var(--border);background:var(--surface);display:flex;align-items:flex-start;gap:12px;flex-shrink:0}
+.dcl{margin-left:auto;background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;padding:2px;line-height:1;transition:color .15s;flex-shrink:0}
+.dcl:hover{color:var(--text)}
+.dname{font-size:18px;font-weight:700}.dser{font-family:'DM Mono',monospace;font-size:12px;color:var(--text3);margin-top:2px}
+.dbody{padding:20px 24px;overflow-y:auto;flex:1}
+
+/* Action buttons */
+.abts{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:22px}
+.abt{padding:10px 4px;border:none;border-radius:var(--rs);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:4px}
+.abt .ai{font-size:16px}
+.ab-re{background:var(--grey-lt);color:var(--grey)}.ab-re:hover{background:#E2E8F0}
+.ab-sc{background:var(--blue-lt);color:var(--blue)}.ab-sc:hover{background:#D6E8FC}
+.ab-st{background:var(--amber-lt);color:var(--amber)}.ab-st:hover{background:#FDE68A}
+.ab-co{background:var(--green-lt);color:var(--green)}.ab-co:hover{background:#D1FAE5}
+.ab-fa{background:var(--red-lt);color:var(--red)}.ab-fa:hover{background:#FECACA}
+
+/* Form sections */
+.fsec{margin-bottom:18px;border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.fsh{padding:10px 16px;background:var(--surface2);font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text3);border-bottom:1px solid var(--border)}
+.fgrid{padding:14px 16px;display:grid;gap:12px;grid-template-columns:1fr 1fr}
+.ff{display:flex;flex-direction:column;gap:4px}
+.ff.s2{grid-column:span 2}
+.ff label{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.04em}
+.ff input,.ff select,.ff textarea{padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--rs);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;transition:border-color .15s;background:#fff;color:var(--text)}
+.ff input:focus,.ff select:focus,.ff textarea:focus{border-color:var(--blue)}
+.ff textarea{resize:vertical;min-height:72px}
+.hwgrid{padding:14px 16px;display:grid;gap:8px;grid-template-columns:1fr 1fr}
+.hwi .hwl{font-size:10.5px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.04em}
+.hwi .hwv{font-size:12.5px;font-family:'DM Mono',monospace;color:var(--text)}
+.dsave{padding:16px 24px;border-top:1px solid var(--border);position:sticky;bottom:0;background:var(--surface);display:flex;gap:10px}
+.bsave{flex:1;padding:11px;background:var(--blue);color:#fff;border:none;border-radius:var(--rs);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:background .15s}
+.bsave:hover{background:var(--blue-dk)}
+.bcanc{padding:11px 20px;background:var(--surface);color:var(--text2);border:1.5px solid var(--border);border-radius:var(--rs);font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:all .15s}
+.bcanc:hover{border-color:var(--text2)}
+
+/* Toast */
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--text);color:#fff;padding:12px 20px;border-radius:var(--r);font-size:13.5px;font-weight:500;box-shadow:var(--shadow-lg);z-index:200;transition:transform .3s cubic-bezier(.4,0,.2,1);white-space:nowrap}
+#toast.show{transform:translateX(-50%) translateY(0)}
+#toast.success{background:var(--green)}
+#toast.error{background:var(--red)}
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- Sidebar -->
+  <nav id="sidebar">
+    <div class="sb-logo">
+      <div class="mark">IT Projects</div>
+      <div class="title">Win11 Upgrade Tracker</div>
+    </div>
+    <div class="sb-nav">
+      <div class="nav-lbl">Views</div>
+      <div class="nav-item active" onclick="setView('all',this)"><span class="nav-icon">⊞</span> All Devices</div>
+      <div class="nav-item" onclick="setView('overdue',this)"><span class="nav-icon">⚠</span> Overdue <span class="nav-badge" id="b-ov">0</span></div>
+      <div class="nav-item" onclick="setView('failed',this)"><span class="nav-icon">✕</span> Failed & Exceptions <span class="nav-badge" id="b-fa">0</span></div>
+      <div class="nav-item" onclick="setView('wave',this)"><span class="nav-icon">◈</span> By Wave</div>
+      <div class="nav-lbl">Export</div>
+      <div class="nav-item" onclick="exportCSV()"><span class="nav-icon">↓</span> Export to CSV</div>
+    </div>
+    <div class="sb-foot">
+      <div class="demo-badge">⚡ Demo Mode</div>
+    </div>
+  </nav>
+
+  <!-- Main -->
+  <div id="main">
+    <div id="topbar">
+      <div class="topbar-title" id="vtitle">All Devices</div>
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="srch" placeholder="Search devices, users, sites..." oninput="render()">
+      </div>
+      <span class="live-dot"></span><span style="font-size:12px;color:var(--text3);margin-left:4px">Demo</span>
+    </div>
+
+    <div id="content">
+      <div class="kpi-grid">
+        <div class="kpi-card c-total"><div class="kpi-lbl">Total</div><div class="kpi-val" id="k-tot">—</div><div class="kpi-sub">devices in scope</div></div>
+        <div class="kpi-card c-complete"><div class="kpi-lbl">Complete</div><div class="kpi-val" id="k-co">—</div><div class="kpi-sub">upgraded</div></div>
+        <div class="kpi-card c-progress"><div class="kpi-lbl">In Progress</div><div class="kpi-val" id="k-ip">—</div><div class="kpi-sub">active now</div></div>
+        <div class="kpi-card c-failed"><div class="kpi-lbl">Failed</div><div class="kpi-val" id="k-fa">—</div><div class="kpi-sub">need attention</div></div>
+        <div class="kpi-card c-overdue"><div class="kpi-lbl">Overdue</div><div class="kpi-val" id="k-ov">—</div><div class="kpi-sub">past scheduled date</div></div>
+        <div class="kpi-card c-pct"><div class="kpi-lbl">Progress</div><div class="kpi-val" id="k-pct">—</div><div class="kpi-sub">completion rate</div></div>
+      </div>
+      <div class="prog-wrap">
+        <div class="prog-lbl"><span>Overall Progress</span><span id="prog-txt">0 of 0</span></div>
+        <div class="prog-bar"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+      </div>
+      <div class="filter-bar">
+        <select class="fsel" id="f-status" onchange="render()">
+          <option value="">All Statuses</option>
+          <option>Not Started</option><option>Scheduled</option><option>In Progress</option>
+          <option>Complete</option><option>Failed</option><option>Deferred</option><option>Cancelled</option>
+        </select>
+        <select class="fsel" id="f-wave" onchange="render()">
+          <option value="">All Waves</option>
+          <option>Wave 1 - Pilot</option><option>Wave 2 - IT & Tech</option>
+          <option>Wave 3 - Finance & Legal</option><option>Wave 4 - Operations</option><option>Wave 5 - Remaining</option>
+        </select>
+        <select class="fsel" id="f-site" onchange="render()">
+          <option value="">All Sites</option>
+          <option>London HQ</option><option>Manchester</option><option>Birmingham</option>
+          <option>Edinburgh</option><option>Bristol</option><option>Leeds</option><option>Remote</option>
+        </select>
+        <div class="fcount" id="fcount"></div>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr>
+            <th onclick="srt('DeviceName')">Device</th>
+            <th onclick="srt('PrimaryUser')">User</th>
+            <th onclick="srt('Site')">Site</th>
+            <th onclick="srt('DeploymentWave')">Wave</th>
+            <th onclick="srt('ScheduledDate')">Scheduled</th>
+            <th onclick="srt('AssignedTech')">Tech</th>
+            <th onclick="srt('Win11Readiness')">Readiness</th>
+            <th onclick="srt('Status')">Status</th>
+          </tr></thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div id="dov" onclick="closeDr()">
+<div id="drawer" onclick="event.stopPropagation()">
+  <div class="dh">
+    <div style="flex:1">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+        <div class="dname" id="d-name">—</div>
+        <span id="d-readiness-badge" style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;display:inline-block"></span>
+      </div>
+      <div class="dser" id="d-ser">—</div>
+    </div>
+    <button class="dcl" onclick="closeDr()">✕</button>
+  </div>
+  <div class="dbody">
+    <div class="abts">
+      <button class="abt ab-re" onclick="qs('Not Started')"><span class="ai">○</span>Mark Ready</button>
+      <button class="abt ab-sc" onclick="qs('Scheduled')"><span class="ai">📅</span>Schedule</button>
+      <button class="abt ab-st" onclick="qs('In Progress')"><span class="ai">▶</span>Start</button>
+      <button class="abt ab-co" onclick="qs('Complete')"><span class="ai">✓</span>Complete</button>
+      <button class="abt ab-fa" onclick="qs('Failed')"><span class="ai">✕</span>Fail</button>
+    </div>
+    <div class="fsh" style="background:#E0E7FF;color:#3730A3;border-bottom:none;font-weight:700">Device Identity</div><div class="fgrid">
+      <div class="ff"><label>Device Name</label><input id="f-dn"></div>
+      <div class="ff"><label>Serial Number</label><input id="f-sn"></div>
+      <div class="ff"><label>Manufacturer</label><select id="f-mfr"><option></option><option>Dell</option><option>HP</option><option>Lenovo</option><option>Microsoft</option><option>Apple</option><option>Acer</option><option>ASUS</option><option>Other</option></select></div>
+      <div class="ff"><label>Model</label><input id="f-mod"></div>
+    </div></div>
+    <div class="fsec"><div class="fsh" style="background:#D1FAE5;color:#065F46;border-bottom:none;font-weight:700">User & Validation</div><div class="fgrid">
+      <div class="ff"><label>Primary User</label><input id="f-pu"></div>
+      <div class="ff"><label>User Verified</label><select id="f-uv"><option>Not Yet Verified</option><option>Verified</option><option>Mismatch Detected</option></select></div>
+      <div class="ff"><label>Last Logged On SAM</label><input id="f-ll"></div>
+      <div class="ff"><label>Scheduling Contact</label><input id="f-sc"></div>
+    </div></div>
+    <div class="fsec"><div class="fsh" style="background:#DBEAFE;color:#1E40AF;border-bottom:none;font-weight:700">Planning & Rollout</div><div class="fgrid">
+      <div class="ff"><label>Status</label><select id="f-st"><option>Not Started</option><option>Scheduled</option><option>In Progress</option><option>Complete</option><option>Failed</option><option>Deferred</option><option>Cancelled</option></select></div>
+      <div class="ff"><label>Scheduled Date</label><input type="date" id="f-sd"></div>
+      <div class="ff"><label>Assigned Tech</label><input id="f-at"></div>
+      <div class="ff"><label>Wave</label><select id="f-wv"><option></option><option>Wave 1 - Pilot</option><option>Wave 2 - IT & Tech</option><option>Wave 3 - Finance & Legal</option><option>Wave 4 - Operations</option><option>Wave 5 - Remaining</option></select></div>
+      <div class="ff"><label>Site</label><select id="f-si"><option></option><option>London HQ</option><option>Manchester</option><option>Birmingham</option><option>Edinburgh</option><option>Bristol</option><option>Leeds</option><option>Remote</option></select></div>
+      <div class="ff"><label>Department</label><input id="f-dp"></div>
+      <div class="ff s2"><label>Physical Location</label><input id="f-pl" placeholder="e.g. 2nd Floor, Desk 24"></div>
+    </div></div>
+    <div class="fsec"><div class="fsh" style="background:#FEE2E2;color:#991B1B;border-bottom:none;font-weight:700">Outcome & Exceptions</div><div class="fgrid">
+      <div class="ff"><label>Upgrade Outcome</label><select id="f-uo"><option></option><option>Success</option><option>Failed - Retry Scheduled</option><option>Failed - Awaiting Parts</option><option>Failed - Escalated</option><option>Deferred by User</option><option>Cancelled</option></select></div>
+      <div class="ff"><label>Failure Reason</label><select id="f-fr"><option></option><option>TPM Not Enabled</option><option>BitLocker Issue</option><option>Hardware Incompatible</option><option>App Compatibility</option><option>Driver Failure</option><option>Disk Space Insufficient</option><option>Network Timeout</option><option>User Unavailable</option><option>Other</option></select></div>
+      <div class="ff"><label>Completion Date</label><input type="date" id="f-cd"></div>
+      <div class="ff"><label>Exception Flag</label><select id="f-ef"><option>None</option><option>VIP User - White Glove</option><option>Legacy App Blocker</option><option>TPM Hardware Issue</option><option>Awaiting Approval</option><option>Security Exception</option><option>Other Exception</option></select></div>
+      <div class="ff s2"><label>Notes</label><textarea id="f-no"></textarea></div>
+    </div></div>
+    
+      <div class="hwi"><div class="hwl">TPM Version</div><div class="hwv" id="hw-tpm">—</div></div>
+      <div class="hwi"><div class="hwl">Free Disk</div><div class="hwv" id="hw-disk">—</div></div>
+      <div class="hwi"><div class="hwl">Secure Boot</div><div class="hwv" id="hw-sb">—</div></div>
+      <div class="hwi"><div class="hwl">OS Version</div><div class="hwv" id="hw-os">—</div></div>
+      <div class="hwi"><div class="hwl">Win11 Readiness</div><div class="hwv" id="hw-rd">—</div></div>
+      <div class="hwi"><div class="hwl">Last Active</div><div class="hwv" id="hw-la">—</div></div>
+      <div class="hwi"><div class="hwl">Remediation Priority</div><div class="hwv" id="hw-rp">—</div></div>
+    </div></div>
+  </div>
+  <div class="dsave">
+    <button class="bcanc" onclick="closeDr()">Cancel</button>
+    <button class="bsave" onclick="saveDev()">Save Changes</button>
+  </div>
+</div>
+
+</div><!-- end dov -->
+<div id="toast"></div>
+
+<script>
+const API_URL = 'https://script.google.com/macros/s/AKfycbx_LmnFLrhXyUrTbzhUIGBJLF8anLJeIYQrbYgbd5IL7t8FXTDh3KOaI4O8Hg5cexzvew/exec';
+let isLive = false;
+
+async function loadLive() {
+  setSyncState('syncing');
+  try {
+    // allorigins proxy handles CORS for Google Apps Script
+    const proxy = 'https://api.allorigins.win/get?url=' + encodeURIComponent(API_URL);
+    const res = await fetch(proxy);
+    const outer = await res.json();
+    const json = JSON.parse(outer.contents);
+    if (json.rows && json.rows.length > 0) {
+      data = json.rows.map(r => ({...r, id: r._row}));
+      isLive = true;
+      const badge = document.querySelector('.demo-badge');
+      badge.innerHTML = '🟢 Live — Google Sheets';
+      badge.style.color = 'var(--green)';
+      render();
+      setSyncState('live');
+    } else {
+      loadDemo();
+    }
+  } catch(err) {
+    console.warn('Live load failed:', err);
+    loadDemo();
+  }
+}
+
+function setSyncState(state) {
+  const dot = document.querySelector('.live-dot');
+  const lbl = document.querySelector('#app #main #topbar span:last-child');
+  if (state === 'syncing') { dot.style.background = 'var(--amber)'; }
+  else if (state === 'live') { dot.style.background = 'var(--green)'; }
+  else { dot.style.background = 'var(--red)'; }
+}
+
+async function saveToSheets(d) {
+  try {
+    // Use allorigins to proxy the save request
+    const saveUrl = API_URL + '?action=save&data=' + encodeURIComponent(JSON.stringify(d));
+    const proxy = 'https://api.allorigins.win/get?url=' + encodeURIComponent(saveUrl);
+    const res = await fetch(proxy);
+    const outer = await res.json();
+    const json = JSON.parse(outer.contents);
+    return json && json.success;
+  } catch(err) {
+    console.error('Save failed:', err);
+    return false;
+  }
+}
+
+const DEMO = [
+  {id:1,DeviceName:'WKSTN-FIN-01',SerialNumber:'SN-44012A',Manufacturer:'Dell',Model:'Latitude 5540',PrimaryUser:'Sarah Johnson',SchedulingContact:'it@company.com',LastLoggedOnSAM:'CORP\\sjohnson',UserVerified:'Verified',Site:'London HQ',DeploymentWave:'Wave 1 - Pilot',Status:'Complete',ScheduledDate:'2026-02-10',AssignedTech:'James Wright',Department:'Finance',PhysicalLocation:'3rd Floor, Desk 12',UpgradeOutcome:'Success',FailureReason:'',CompletionDate:'2026-02-10',ExceptionFlag:'None',Notes:'Smooth upgrade, no issues.',CPUModel:'Intel Core i5-1235U',TPMVersion:'2.0',DiskSpaceFreeGB:'82',SecureBootStatus:'Enabled',OSVersion:'22H2',Win11Readiness:'Ready',LastActive:'2026-02-28',RemediationPriority:'Low'},
+  {id:2,DeviceName:'WKSTN-FIN-02',SerialNumber:'SN-44013B',Manufacturer:'HP',Model:'EliteBook 840',PrimaryUser:'Tom Richards',SchedulingContact:'it@company.com',LastLoggedOnSAM:'CORP\\trichards',UserVerified:'Verified',Site:'London HQ',DeploymentWave:'Wave 1 - Pilot',Status:'Complete',ScheduledDate:'2026-02-11',AssignedTech:'James Wright',Department:'Finance',PhysicalLocation:'3rd Floor, Desk 18',UpgradeOutcome:'Success',FailureReason:'',CompletionDate:'2026-02-11',ExceptionFlag:'None',Notes:'',CPUModel:'Intel Core i7-1265U',TPMVersion:'2.0',DiskSpaceFreeGB:'120',SecureBootStatus:'Enabled',OSVersion:'22H2',Win11Readiness:'Ready',LastActive:'2026-02-27',RemediationPriority:'Low'},
+  {id:3,DeviceName:'WKSTN-IT-01',SerialNumber:'SN-55201C',Manufacturer:'Lenovo',Model:'ThinkPad X1 Carbon',PrimaryUser:'Mike Chen',SchedulingContact:'it@company.com',LastLoggedOnSAM:'CORP\\mchen',UserVerified:'Verified',Site:'Manchester',DeploymentWave:'Wave 2 - IT & Tech',Status:'In Progress',ScheduledDate:'2026-03-03',AssignedTech:'Priya Patel',Department:'IT',PhysicalLocation:'1st Floor, IT Suite',UpgradeOutcome:'',FailureReason:'',CompletionDate:'',ExceptionFlag:'None',Notes:'User logged off, upgrade running.',CPUModel:'Intel Core i7-1185G7',TPMVersion:'2.0',DiskSpaceFreeGB:'55',SecureBootStatus:'Enabled',OSVersion:'21H2',Win11Readiness:'Ready',LastActive:'2026-03-03',RemediationPriority:'Medium'},
+  {id:4,DeviceName:'WKSTN-IT-02',SerialNumber:'SN-55202D',Manufacturer:'Dell',Model:'Latitude 7430',PrimaryUser:'Anna Foster',SchedulingContact:'it@company.com',LastLoggedOnSAM:'CORP\\bsmith',UserVerified:'Mismatch Detected',Site:'Manchester',DeploymentWave:'Wave 2 - IT & Tech',Status:'Scheduled',ScheduledDate:'2026-03-05',AssignedTech:'Priya Patel',Department:'IT',PhysicalLocation:'1st Floor, Desk 4',UpgradeOutcome:'',FailureReason:'',CompletionDate:'',ExceptionFlag:'None',Notes:'Last logged on user differs from assigned — confirm before upgrade.',CPUModel:'Intel Core i5-1245U',TPMVersion:'2.0',DiskSpaceFreeGB:'34',SecureBootStatus:'Enabled',OSVersion:'22H2',Win11Readiness:'Ready',LastActive:'2026-03-01',RemediationPriority:'Low'},
+  {id:5,DeviceName:'WKSTN-FIN-03',SerialNumber:'SN-44014E',Manufacturer:'HP',Model:'ProBook 450',PrimaryUser:'David Walsh',SchedulingContact:'mgr@company.com',LastLoggedOnSAM:'CORP\\dwalsh',UserVerified:'Verified',Site:'London HQ',DeploymentWave:'Wave 3 - Finance & Legal',Status:'Failed',ScheduledDate:'2026-02-28',AssignedTech:'James Wright',Department:'Finance',PhysicalLocation:'3rd Floor, Desk 22',UpgradeOutcome:'Failed - Retry Scheduled',FailureReason:'TPM Not Enabled',CompletionDate:'2026-02-28',ExceptionFlag:'TPM Hardware Issue',Notes:'TPM disabled in BIOS. Engineer to re-enter BIOS and enable before retry.',CPUModel:'Intel Core i5-1135G7',TPMVersion:'1.2',DiskSpaceFreeGB:'12',SecureBootStatus:'Disabled',OSVersion:'21H2',Win11Readiness:'Not Ready',LastActive:'2026-02-25',RemediationPriority:'High'},
+  {id:6,DeviceName:'WKSTN-LEG-01',SerialNumber:'SN-77301F',Manufacturer:'Dell',Model:'OptiPlex 7090',PrimaryUser:'Claire Moss',SchedulingContact:'it@company.com',LastLoggedOnSAM:'CORP\\cmoss',UserVerified:'Verified',Site:'Birmingham',DeploymentWave:'Wave 3 - Finance & Legal',Status:'Scheduled',ScheduledDate:'2026-03-06',AssignedTech:"Sam O'Brien",Department:'Legal',PhysicalLocation:'2nd Floor, Desk 8',UpgradeOutcome:'',FailureReason:'',CompletionDate:'',ExceptionFlag:'Legacy App Blocker',Notes:'Awaiting confirmation that legacy case management app is compatible.',CPUModel:'Intel Core i7-10700',TPMVersion:'2.0',DiskSpaceFreeGB:'210',SecureBootStatus:'Enabled',OSVersion:'22H2',Win11Readiness:'Ready',LastActive:'2026-03-02',RemediationPriority:'Medium'},
+  {id:7,DeviceName:'WKSTN-OPS-01',SerialNumber:'SN-88401G',Manufacturer:'Lenovo',Model:'ThinkCentre M70q',PrimaryUser:'Reception Desk',SchedulingContact:'ops@company.com',LastLoggedOnSAM:'CORP\\reception',UserVerified:'Verified',Site:'Edinburgh',DeploymentWave:'Wave 4 - Operations',Status:'Not Started',ScheduledDate:'',AssignedTech:'',Department:'Operations',PhysicalLocation:'Ground Floor, Reception',UpgradeOutcome:'',FailureReason:'',CompletionDate:'',ExceptionFlag:'VIP User - White Glove',Notes:'Shared reception device. Must be upgraded out of hours.',CPUModel:'Intel Core i5-10400T',TPMVersion:'2.0',DiskSpaceFreeGB:'88',SecureBootStatus:'Enabled',OSVersion:'21H2',Win11Readiness:'Ready',LastActive:'2026-03-03',RemediationPriority:'Medium'},
+  {id:8,DeviceName:'WKSTN-OPS-02',SerialNumber:'SN-88402H',Manufacturer:'HP',Model:'EliteDesk 800',PrimaryUser:'Kevin Park',SchedulingContact:'ops@company.com',LastLoggedOnSAM:'CORP\\kpark',UserVerified:'Not Yet Verified',Site:'Edinburgh',DeploymentWave:'Wave 4 - Operations',Status:'Not Started',ScheduledDate:'',AssignedTech:'',Department:'Operations',PhysicalLocation:'1st Floor, Open Plan',UpgradeOutcome:'',FailureReason:'',CompletionDate:'',ExceptionFlag:'None',Notes:'',CPUModel:'Intel Core i5-9500',TPMVersion:'2.0',DiskSpaceFreeGB:'44',SecureBootStatus:'Enabled',OSVersion:'20H2',Win11Readiness:'Not Ready',LastActive:'2026-02-20',RemediationPriority:'High'},
+  {id:9,DeviceName:'WKSTN-SAL-01',SerialNumber:'SN-99501I',Manufacturer:'Microsoft',Model:'Surface Pro 9',PrimaryUser:'Emma Stone',SchedulingContact:'it@company.com',LastLoggedOnSAM:'CORP\\estone',UserVerified:'Verified',Site:'Bristol',DeploymentWave:'Wave 4 - Operations',Status:'Deferred',ScheduledDate:'2026-02-20',AssignedTech:"Sam O'Brien",Department:'Sales',PhysicalLocation:'Hot Desk',UpgradeOutcome:'Deferred by User',FailureReason:'',CompletionDate:'',ExceptionFlag:'None',Notes:'User travelling until March 15. Rescheduled.',CPUModel:'Intel Core i7-1255U',TPMVersion:'2.0',DiskSpaceFreeGB:'95',SecureBootStatus:'Enabled',OSVersion:'22H2',Win11Readiness:'Ready',LastActive:'2026-02-18',RemediationPriority:'Low'},
+  {id:10,DeviceName:'WKSTN-SAL-02',SerialNumber:'SN-99502J',Manufacturer:'Dell',Model:'XPS 15',PrimaryUser:'Liam Turner',SchedulingContact:'it@company.com',LastLoggedOnSAM:'CORP\\lturner',UserVerified:'Verified',Site:'Bristol',DeploymentWave:'Wave 5 - Remaining',Status:'Not Started',ScheduledDate:'',AssignedTech:'',Department:'Sales',PhysicalLocation:'2nd Floor, Desk 31',UpgradeOutcome:'',FailureReason:'',CompletionDate:'',ExceptionFlag:'None',Notes:'',CPUModel:'Intel Core i9-12900H',TPMVersion:'2.0',DiskSpaceFreeGB:'310',SecureBootStatus:'Enabled',OSVersion:'22H2',Win11Readiness:'Ready',LastActive:'2026-03-01',RemediationPriority:'Low'},
+  {id:11,DeviceName:'WKSTN-FIN-04',SerialNumber:'SN-44015K',Manufacturer:'HP',Model:'EliteBook 650',PrimaryUser:'Grace Hall',SchedulingContact:'it@company.com',LastLoggedOnSAM:'CORP\\ghall',UserVerified:'Verified',Site:'London HQ',DeploymentWave:'Wave 3 - Finance & Legal',Status:'Scheduled',ScheduledDate:'2026-03-07',AssignedTech:'James Wright',Department:'Finance',PhysicalLocation:'3rd Floor, Desk 9',UpgradeOutcome:'',FailureReason:'',CompletionDate:'',ExceptionFlag:'None',Notes:'',CPUModel:'Intel Core i5-1235U',TPMVersion:'2.0',DiskSpaceFreeGB:'67',SecureBootStatus:'Enabled',OSVersion:'22H2',Win11Readiness:'Ready',LastActive:'2026-03-02',RemediationPriority:'Low'},
+  {id:12,DeviceName:'WKSTN-MGT-01',SerialNumber:'SN-11001L',Manufacturer:'Apple',Model:'MacBook Pro 14',PrimaryUser:'Rachel Green',SchedulingContact:'ea@company.com',LastLoggedOnSAM:'CORP\\rgreen',UserVerified:'Verified',Site:'London HQ',DeploymentWave:'Wave 1 - Pilot',Status:'Complete',ScheduledDate:'2026-02-09',AssignedTech:'James Wright',Department:'C-Suite',PhysicalLocation:'5th Floor, Exec Suite',UpgradeOutcome:'Success',FailureReason:'',CompletionDate:'2026-02-09',ExceptionFlag:'VIP User - White Glove',Notes:'White glove service. PM present during upgrade.',CPUModel:'Apple M2 Pro',TPMVersion:'N/A',DiskSpaceFreeGB:'450',SecureBootStatus:'Enabled',OSVersion:'22H2',Win11Readiness:'Ready',LastActive:'2026-03-03',RemediationPriority:'Low'},
+];
+
+let data = JSON.parse(JSON.stringify(DEMO));
+let curId = null, sortCol = 'DeviceName', sortDir = 1, curView = 'all';
+
+function getFiltered() {
+  const s = document.getElementById('srch').value.toLowerCase();
+  const fs = document.getElementById('f-status').value;
+  const fw = document.getElementById('f-wave').value;
+  const fsi = document.getElementById('f-site').value;
+  const today = new Date(); today.setHours(0,0,0,0);
+  return data.filter(d => {
+    if (s && !JSON.stringify(d).toLowerCase().includes(s)) return false;
+    if (fs && d.Status !== fs) return false;
+    if (fw && d.DeploymentWave !== fw) return false;
+    if (fsi && d.Site !== fsi) return false;
+    if (curView === 'overdue') {
+      if (d.Status === 'Complete' || d.Status === 'Cancelled') return false;
+      if (!d.ScheduledDate) return false;
+      if (new Date(d.ScheduledDate) >= today) return false;
+    }
+    if (curView === 'failed') {
+      if (d.Status !== 'Failed' && (!d.ExceptionFlag || d.ExceptionFlag === 'None')) return false;
+    }
+    return true;
+  }).sort((a,b) => {
+    const av = (a[sortCol]||'').toLowerCase(), bv = (b[sortCol]||'').toLowerCase();
+    return av < bv ? -sortDir : av > bv ? sortDir : 0;
+  });
+}
+
+function render() {
+  const rows = getFiltered();
+  document.getElementById('fcount').textContent = rows.length + ' device' + (rows.length!==1?'s':'');
+  const tbody = document.getElementById('tbody');
+  if (!rows.length) { tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--text3)">No devices match filters</td></tr>'; return; }
+  tbody.innerHTML = rows.map(d => `
+    <tr onclick="openDev(${d.id})">
+      <td><div class="dn">${e(d.DeviceName)}</div><div class="ds">${e(d.SerialNumber)}</div></td>
+      <td><div class="un">${e(d.PrimaryUser||'—')}</div><div class="ud">${e(d.Department||'')}</div></td>
+      <td>${e(d.Site||'—')}</td>
+      <td>${e(waveShort(d.DeploymentWave))}</td>
+      <td>${fd(d.ScheduledDate)}</td>
+      <td>${e(d.AssignedTech||'—')}</td>
+      <td><span class="${rc(d.Win11Readiness)}">${e(d.Win11Readiness||'—')}</span></td>
+      <td>${badge(d.Status)}</td>
+    </tr>`).join('');
+  updateKPIs();
+}
+
+function updateKPIs() {
+  const t=data.length, co=data.filter(d=>d.Status==='Complete').length,
+        ip=data.filter(d=>d.Status==='In Progress').length,
+        fa=data.filter(d=>d.Status==='Failed').length;
+  const today=new Date();today.setHours(0,0,0,0);
+  const ov=data.filter(d=>d.Status!=='Complete'&&d.Status!=='Cancelled'&&d.ScheduledDate&&new Date(d.ScheduledDate)<today).length;
+  const pct=t>0?Math.round(co/t*100):0;
+  document.getElementById('k-tot').textContent=t;
+  document.getElementById('k-co').textContent=co;
+  document.getElementById('k-ip').textContent=ip;
+  document.getElementById('k-fa').textContent=fa;
+  document.getElementById('k-ov').textContent=ov;
+  document.getElementById('k-pct').textContent=pct+'%';
+  document.getElementById('prog-fill').style.width=pct+'%';
+  document.getElementById('prog-txt').textContent=co+' of '+t+' devices';
+  document.getElementById('b-ov').textContent=ov;
+  document.getElementById('b-fa').textContent=fa;
+}
+
+function openDev(id) {
+  const d = data.find(x=>x.id===id); if(!d) return;
+  curId = id;
+  document.getElementById('d-name').textContent = d.DeviceName||'—';
+  document.getElementById('d-ser').textContent = d.SerialNumber||'';
+  sv('f-dn',d.DeviceName);sv('f-sn',d.SerialNumber);sv('f-mfr',d.Manufacturer);sv('f-mod',d.Model);
+  sv('f-pu',d.PrimaryUser);sv('f-uv',d.UserVerified||'Not Yet Verified');sv('f-ll',d.LastLoggedOnSAM);sv('f-sc',d.SchedulingContact);
+  sv('f-st',d.Status||'Not Started');sv('f-sd',d.ScheduledDate);sv('f-at',d.AssignedTech);
+  sv('f-wv',d.DeploymentWave);sv('f-si',d.Site);sv('f-dp',d.Department);sv('f-pl',d.PhysicalLocation);
+  sv('f-uo',d.UpgradeOutcome);sv('f-fr',d.FailureReason);sv('f-cd',d.CompletionDate);
+  sv('f-ef',d.ExceptionFlag||'None');sv('f-no',d.Notes);
+  document.getElementById('hw-cpu').textContent=d.CPUModel||'—';
+  document.getElementById('hw-tpm').textContent=d.TPMVersion||'—';
+  document.getElementById('hw-disk').textContent=d.DiskSpaceFreeGB?d.DiskSpaceFreeGB+' GB free':'—';
+  document.getElementById('hw-sb').textContent=d.SecureBootStatus||'—';
+  document.getElementById('hw-os').textContent=d.OSVersion||'—';
+  document.getElementById('hw-la').textContent=fd(d.LastActive);
+  document.getElementById('hw-rp').textContent=d.RemediationPriority||'—';
+  document.getElementById('hw-dt').textContent=d.DeviceType||'—';
+  // Win11 Readiness badge in header
+  const rb = document.getElementById('d-readiness-badge');
+  const rv = d.Win11Readiness||'';
+  if(rv.toLowerCase()==='ready'){rb.textContent='✓ Win11 Ready';rb.style.background='#D1FAE5';rb.style.color='#065F46';}
+  else if(rv.toLowerCase().includes('not')){rb.textContent='✕ Not Ready';rb.style.background='#FEE2E2';rb.style.color='#991B1B';}
+  else{rb.textContent=rv||'Readiness Unknown';rb.style.background='#F1F5F9';rb.style.color='#64748B';}
+  document.getElementById('dov').classList.add('open');
+  document.getElementById('drawer').classList.add('open');
+}
+
+function closeDr() {
+  document.getElementById('dov').classList.remove('open');
+  document.getElementById('drawer').classList.remove('open');
+  curId=null;
+}
+
+async function saveDev() {
+  const d=data.find(x=>x.id===curId); if(!d) return;
+  d.DeviceName=gv('f-dn');d.SerialNumber=gv('f-sn');d.Manufacturer=gv('f-mfr');d.Model=gv('f-mod');
+  d.PrimaryUser=gv('f-pu');d.UserVerified=gv('f-uv');d.LastLoggedOnSAM=gv('f-ll');d.SchedulingContact=gv('f-sc');
+  d.Status=gv('f-st');d.ScheduledDate=gv('f-sd');d.AssignedTech=gv('f-at');
+  d.DeploymentWave=gv('f-wv');d.Site=gv('f-si');d.Department=gv('f-dp');d.PhysicalLocation=gv('f-pl');
+  d.UpgradeOutcome=gv('f-uo');d.FailureReason=gv('f-fr');d.CompletionDate=gv('f-cd');
+  d.ExceptionFlag=gv('f-ef');d.Notes=gv('f-no');
+  closeDr(); render();
+  if (isLive) {
+    const ok = await saveToSheets(d);
+    toast(ok ? 'Saved to Google Sheets ✓' : 'Save failed — check connection', ok ? 'success' : 'error');
+  } else {
+    toast('Saved locally — demo mode','success');
+  }
+}
+
+function qs(status) {
+  sv('f-st',status);
+  if(status==='Complete'){sv('f-cd',new Date().toISOString().split('T')[0]);sv('f-uo','Success');}
+  if(status==='Failed'){sv('f-cd',new Date().toISOString().split('T')[0]);}
+  saveDev();
+}
+
+function setView(v, el) {
+  curView=v;
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  el.classList.add('active');
+  const titles={all:'All Devices',overdue:'Overdue Devices',failed:'Failed & Exceptions',wave:'Progress by Wave'};
+  document.getElementById('vtitle').textContent=titles[v]||'Devices';
+  render();
+}
+
+function srt(col) { if(sortCol===col)sortDir*=-1; else{sortCol=col;sortDir=1;} render(); }
+
+function exportCSV() {
+  const keys=Object.keys(DEMO[0]).filter(k=>k!=='id');
+  const rows=[keys,...data.map(d=>keys.map(k=>d[k]||''))];
+  const csv=rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download='win11-tracker-'+new Date().toISOString().split('T')[0]+'.csv';
+  a.click(); toast('CSV exported','success');
+}
+
+function e(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function sv(id,v){const el=document.getElementById(id);if(el)el.value=v||'';}
+function gv(id){const el=document.getElementById(id);return el?el.value:'';}
+function fd(d){if(!d)return'—';try{const dt=new Date(d);return isNaN(dt)?d:dt.toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});}catch{return d;}}
+function waveShort(w){if(!w)return'—';const m=w.match(/Wave\s*(\d)/i);return m?'Wave '+m[1]:w;}
+function rc(r){if(!r)return'r-unk';if(r.toLowerCase().includes('not'))return'r-no';if(r.toLowerCase()==='ready')return'r-yes';return'r-unk';}
+function badge(s){const map={'Not Started':'b-ns','Scheduled':'b-sc','In Progress':'b-ip','Complete':'b-co','Failed':'b-fa','Deferred':'b-de','Cancelled':'b-ca'};return`<span class="badge ${map[s]||'b-ns'}">${e(s||'Not Started')}</span>`;}
+function toast(msg,type=''){const t=document.getElementById('toast');t.textContent=msg;t.className=type?'show '+type:'show';setTimeout(()=>t.className=type,3000);}
+
+loadLive();;
+</script>
+</body>
+</html>
