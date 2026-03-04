@@ -332,7 +332,7 @@ async function loadLive() {
       const dot = document.querySelector('.live-dot');
       if (dot) { dot.style.background = 'var(--green)'; }
       const topbarLabel = document.querySelector('#main #topbar span:last-of-type');
-      if (topbarLabel) { topbarLabel.textContent = 'Live'; topbarLabel.style.color = 'var(--green)'; }
+      const syncLabel = document.getElementById('sync-label'); if(syncLabel){syncLabel.textContent='Live';syncLabel.style.color='var(--green)';}
       render();
       setSyncState('live');
       console.log('Live data loaded:', data.length, 'devices');
