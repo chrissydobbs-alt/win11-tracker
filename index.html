@@ -308,14 +308,18 @@ tr{cursor:pointer;transition:background .1s}
 const API_URL = 'https://script.google.com/macros/s/AKfycbx_LmnFLrhXyUrTbzhUIGBJLF8anLJeIYQrbYgbd5IL7t8FXTDh3KOaI4O8Hg5cexzvew/exec';
 let isLive = false;
 
+function loadDemo() {
+  data = JSON.parse(JSON.stringify(DEMO));
+  render();
+  setSyncState('offline');
+}
+
 async function loadLive() {
   setSyncState('syncing');
   try {
-    // allorigins proxy handles CORS for Google Apps Script
-    const proxy = 'https://api.allorigins.win/get?url=' + encodeURIComponent(API_URL);
-    const res = await fetch(proxy);
-    const outer = await res.json();
-    const json = JSON.parse(outer.contents);
+    // Direct fetch works for GET requests to Apps Script
+    const res = await fetch(API_URL);
+    const json = await res.json();
     if (json.rows && json.rows.length > 0) {
       data = json.rows.map(r => ({...r, id: r._row}));
       isLive = true;
@@ -343,12 +347,13 @@ function setSyncState(state) {
 
 async function saveToSheets(d) {
   try {
-    // Use allorigins to proxy the save request
-    const saveUrl = API_URL + '?action=save&data=' + encodeURIComponent(JSON.stringify(d));
-    const proxy = 'https://api.allorigins.win/get?url=' + encodeURIComponent(saveUrl);
-    const res = await fetch(proxy);
-    const outer = await res.json();
-    const json = JSON.parse(outer.contents);
+    // text/plain skips CORS preflight check
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(d)
+    });
+    const json = await res.json();
     return json && json.success;
   } catch(err) {
     console.error('Save failed:', err);
