@@ -183,7 +183,7 @@ tr{cursor:pointer;transition:background .1s}
         <span class="search-icon">🔍</span>
         <input type="text" id="srch" placeholder="Search devices, users, sites..." oninput="render()">
       </div>
-      <span class="live-dot"></span><span style="font-size:12px;color:var(--text3);margin-left:4px">Demo</span>
+      <span class="live-dot"></span><span id="sync-label" style="font-size:12px;color:var(--text3);margin-left:4px">Loading...</span>
     </div>
 
     <div id="content">
@@ -328,6 +328,11 @@ async function loadLive() {
       const badge = document.querySelector('.demo-badge');
       badge.innerHTML = '🟢 Live — Google Sheets';
       badge.style.color = 'var(--green)';
+      // Fix topbar dot and label
+      const dot = document.querySelector('.live-dot');
+      if (dot) { dot.style.background = 'var(--green)'; }
+      const topbarLabel = document.querySelector('#main #topbar span:last-of-type');
+      if (topbarLabel) { topbarLabel.textContent = 'Live'; topbarLabel.style.color = 'var(--green)'; }
       render();
       setSyncState('live');
       console.log('Live data loaded:', data.length, 'devices');
